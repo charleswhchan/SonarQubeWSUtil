@@ -29,6 +29,7 @@ public class Main {
     // TimeMachine options
     private static final String FROM_DATETIME = "fromDateTime";
     private static final String TO_DATETIME = "toDateTime";
+    private static final String METRICS = "metrics";
 
     // SonarQube JSON keys
     private static final String PROJECT_ID_KEY = "id";
@@ -45,6 +46,7 @@ public class Main {
         String password = null;
         String fromDateTime = null;
         String toDateTime = null;
+        String metrics = "sqale_index";
 
         // Get a list of arguments from command line.
         Options options = new Options();
@@ -78,6 +80,9 @@ public class Main {
         if (cmd.hasOption(TO_DATETIME)) {
             toDateTime = cmd.getOptionValue(TO_DATETIME);
         }
+        if (cmd.hasOption(METRICS)) {
+            metrics = cmd.getOptionValue(METRICS);
+        }
             
 
         // Comma separated values:
@@ -93,10 +98,10 @@ public class Main {
         // Get a list of all projects.
         // See: http://nemo.sonarqube.org/api_documentation#api/projects
         String projectsJson = getSQJson(uri, username, password, "/projects");
-        JSONArray projects = new JSONArray(projectsJson);
-        int length = projects.length();        
+        JSONArray projectsJsonArray = new JSONArray(projectsJson);
+        int length = projectsJsonArray.length();        
         for (int i = 0; i < length; ++i) {
-            JSONObject project = projects.getJSONObject(i);
+            JSONObject project = projectsJsonArray.getJSONObject(i);
             String id = project.getString(PROJECT_ID_KEY);
             String key = project.getString(PROJECT_KEY_KEY);
 
@@ -106,7 +111,7 @@ public class Main {
             // Get metric for a specific project using time machine
             // See: http://nemo.sonarqube.org/api_documentation#api/timemachine
             StringBuilder resource = new StringBuilder();
-            resource.append("/timemachine?resource=").append(key).append("&metrics=sqale_index");
+            resource.append("/timemachine?resource=").append(key).append("&metrics=").append(metrics);
             
             // Add fromDateTime and toDateTime parameters
             if (fromDateTime != null && toDateTime != null)
@@ -116,23 +121,23 @@ public class Main {
             }            
             String metricsJson = getSQJson(uri, username, password, resource.toString());
                         
-            JSONArray metrics = new JSONArray(metricsJson).getJSONObject(0).getJSONArray(TIME_MACHINE_CELLS_KEY);
+            JSONArray metricsJsonArray = new JSONArray(metricsJson).getJSONObject(0).getJSONArray(TIME_MACHINE_CELLS_KEY);
             
             String oldestDate = "";
             int oldestValue = 0;
             String newestDate = "";
             int newestValue = 0;
             
-            if (metrics != null && metrics.length() > 0) {
-                JSONObject oldestMeasure = metrics.getJSONObject(0);
+            if (metricsJsonArray != null && metricsJsonArray.length() > 0) {
+                JSONObject oldestMeasure = metricsJsonArray.getJSONObject(0);
                 oldestDate = oldestMeasure.getString(TIME_MACHINE_DATE_KEY);
                 oldestValue = oldestMeasure.getJSONArray(TIME_MACHINE_VALUE_KEY).getInt(0);
 
-                int lastIndex = metrics.length() - 1;
+                int lastIndex = metricsJsonArray.length() - 1;
                 if (lastIndex < 0) {
                     lastIndex = 0;
                 }
-                JSONObject newestMeasure = metrics.getJSONObject(lastIndex);
+                JSONObject newestMeasure = metricsJsonArray.getJSONObject(lastIndex);
                 newestDate = newestMeasure.getString(TIME_MACHINE_DATE_KEY);
                 newestValue = newestMeasure.getJSONArray(TIME_MACHINE_VALUE_KEY).getInt(0);
             }
