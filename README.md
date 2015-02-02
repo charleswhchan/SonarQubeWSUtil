@@ -1,4 +1,6 @@
-# SonarQubeWSUtil
+[![Build Status](https://travis-ci.org/charleswhchan/SonarQubeWSUtil.svg?branch=master)](https://travis-ci.org/charleswhchan/SonarQubeWSUtil)
+
+# SonarQubeWSUtil 
 
 A small utility to compare the technical debt from all projects within a SonarQube instance.
 
